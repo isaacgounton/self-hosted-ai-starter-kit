@@ -3,13 +3,14 @@ volumes:
   postgres_storage:
   ollama_storage:
   qdrant_storage:
+  minio_storage:
 
 networks:
-  demo:
+  n8n-ai-network:
 
 x-n8n: &service-n8n
-  image: n8nio/n8n:latest
-  networks: ['demo']
+  build: .
+  networks: ['n8n-ai-network']
   environment:
     - DB_TYPE=postgresdb
     - DB_POSTGRESDB_HOST=postgres
@@ -20,14 +21,24 @@ x-n8n: &service-n8n
     - N8N_ENCRYPTION_KEY
     - N8N_USER_MANAGEMENT_JWT_SECRET
     - OLLAMA_HOST=${OLLAMA_HOST:-ollama:11434}
+    - 'N8N_EDITOR_BASE_URL=${SERVICE_URL_N8N}'
+    - 'WEBHOOK_URL=${SERVICE_URL_N8N}'
+    - 'N8N_HOST=${SERVICE_URL_N8N}'
+    - N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true
+    - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
+    - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+    - N8N_ENABLE_EXTERNAL_MODULES=true
+    - 'NODE_FUNCTION_ALLOW_EXTERNAL=axios,cheerio,moment,canvas'
+    - N8N_RUNNERS_ENABLED=true
+    - N8N_REINSTALL_MISSING_PACKAGES=true
+    - GENERIC_TIMEZONE=America/Toronto
   env_file:
-    - path: .env
-      required: true
+    - .env
 
 x-ollama: &service-ollama
   image: ollama/ollama:latest
   container_name: ollama
-  networks: ['demo']
+  networks: ['n8n-ai-network']
   restart: unless-stopped
   ports:
     - 11434:11434
@@ -36,7 +47,7 @@ x-ollama: &service-ollama
 
 x-init-ollama: &init-ollama
   image: ollama/ollama:latest
-  networks: ['demo']
+  networks: ['n8n-ai-network']
   container_name: ollama-pull-llama
   volumes:
     - ollama_storage:/root/.ollama
@@ -45,13 +56,13 @@ x-init-ollama: &init-ollama
     - OLLAMA_HOST=ollama:11434
   command:
     - "-c"
-    - "sleep 3; ollama pull llama3.2"
+    - "sleep 3; ollama pull gemini-3-flash-preview:cloud"
 
 services:
   postgres:
     image: postgres:16-alpine
     hostname: postgres
-    networks: ['demo']
+    networks: ['n8n-ai-network']
     restart: unless-stopped
     environment:
       - POSTGRES_USER
@@ -100,12 +111,30 @@ services:
     image: qdrant/qdrant
     hostname: qdrant
     container_name: qdrant
-    networks: ['demo']
+    networks: ['n8n-ai-network']
     restart: unless-stopped
     ports:
       - 6333:6333
     volumes:
       - qdrant_storage:/qdrant/storage
+
+  minio:
+    image: minio/minio:latest
+    hostname: minio
+    container_name: minio
+    networks: ['n8n-ai-network']
+    restart: unless-stopped
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_SERVER_URL=http://localhost:9000
+      - MINIO_BROWSER_REDIRECT_URL=http://localhost:9001
+    volumes:
+      - minio_storage:/data
+    command: server /data --console-address ":9001"
 
   ollama-cpu:
     profiles: ["cpu"]

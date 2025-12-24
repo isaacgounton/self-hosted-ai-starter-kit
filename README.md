@@ -22,6 +22,8 @@ and run the latest local LLMs
 ✅ [**Qdrant**](https://qdrant.tech/) - Open-source, high performance vector
 store with an comprehensive API
 
+✅ [**MinIO**](https://min.io/) - High-performance object storage server compatible with Amazon S3 API
+
 ✅ [**PostgreSQL**](https://www.postgresql.org/) -  Workhorse of the Data
 Engineering world, handles large amounts of data safely.
 
@@ -125,7 +127,10 @@ After completing the installation steps above, simply follow the steps below to 
    console logs to check on the progress.
 
 To open n8n at any time, visit <http://localhost:5678/> in your browser.
-
+**MinIO Access:**
+- **API Endpoint**: <http://localhost:9000/>
+- **Web Console**: <http://localhost:9001/>
+- **Default Credentials**: `minioadmin` / `your-secure-minio-password-here`
 With your n8n instance, you’ll have access to over 400 integrations and a
 suite of basic and advanced AI nodes such as
 [AI Agent](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.agent/),
