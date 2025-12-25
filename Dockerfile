@@ -1,14 +1,13 @@
 # n8n with FFmpeg and Canvas support
-# Based on official n8n image
-FROM docker.n8n.io/n8nio/n8n:latest
+# Base image: dhanushreddy29/n8n-ffmpeg (includes FFmpeg)
+# Docker Hub: https://hub.docker.com/r/dhanushreddy29/n8n-ffmpeg
+FROM dhanushreddy29/n8n-ffmpeg:latest
 
 # Switch to root to install system packages
 USER root
 
-# Install FFmpeg and canvas build dependencies
-RUN apk update && \
-    apk add --no-cache \
-  ffmpeg \
+# Install canvas build dependencies
+RUN apk add --no-cache \
   build-base \
   g++ \
   cairo-dev \
@@ -17,8 +16,7 @@ RUN apk update && \
   libjpeg-turbo-dev \
   librsvg-dev \
   pixman-dev \
-  pkgconfig && \
-    rm -rf /var/cache/apk/*
+  pkgconfig
 
 # Prepare n8n data directory
 RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
