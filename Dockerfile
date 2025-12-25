@@ -3,7 +3,10 @@ FROM n8nio/n8n:latest
 
 # Install system dependencies for canvas
 USER root
-RUN apk add --no-cache \
+# Enable community repository for ffmpeg
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.19/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache \
   build-base \
   g++ \
   cairo-dev \
