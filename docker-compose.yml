@@ -29,7 +29,7 @@ x-n8n: &service-n8n
     - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
     - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
     - N8N_ENABLE_EXTERNAL_MODULES=true
-    - 'NODE_FUNCTION_ALLOW_EXTERNAL=axios,cheerio,moment,canvas'
+    - 'NODE_FUNCTION_ALLOW_EXTERNAL=axios,cheerio,moment'
     - N8N_RUNNERS_ENABLED=true
     # Disable internal Python runner (use external mode for production)
     - N8N_RUNNERS_PYTHON_MODE=disabled
