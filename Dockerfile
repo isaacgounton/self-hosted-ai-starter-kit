@@ -3,8 +3,9 @@ FROM n8nio/n8n:latest
 
 # Install system dependencies for canvas
 USER root
-# Enable community repository for ffmpeg
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.19/community" >> /etc/apk/repositories && \
+# Enable community repository for ffmpeg (detect Alpine version dynamically)
+RUN sed -i 's/http:\/\/dl-cdn.alpinelinux.org\/alpine/http:\/\/dl-cdn.alpinelinux.org\/alpine/' /etc/apk/repositories && \
+    echo "$(cat /etc/apk/repositories | head -1 | sed 's/main/community/')" >> /etc/apk/repositories && \
     apk update && \
     apk add --no-cache \
   build-base \
