@@ -1,0 +1,17 @@
+# Coolify Configuration for Self-Hosted AI Starter Kit
+# https://coolify.io
+
+# This configuration optimizes the stack for Coolify deployment
+# Main service: n8n on port 5678
+# Supporting services (internal only): postgres, ollama, qdrant, minio
+
+# Required Environment Variables (set in Coolify):
+# - POSTGRES_USER=n8n
+# - POSTGRES_PASSWORD=<secure-password>
+# - POSTGRES_DB=n8n
+# - N8N_ENCRYPTION_KEY=<32-char-key>
+# - N8N_USER_MANAGEMENT_JWT_SECRET=<32-char-key>
+# - SERVICE_URL_N8N=https://your-domain.com
+# - MINIO_ROOT_PASSWORD=<secure-password>
+
+# Generate secrets with: openssl rand -base64 32

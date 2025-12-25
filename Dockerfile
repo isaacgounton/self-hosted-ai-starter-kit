@@ -17,9 +17,13 @@ RUN apk add --no-cache \
   pkgconfig \
   ffmpeg
 
-# Switch back to node user and install canvas
-USER node
-RUN cd /home/node/.n8n && npm install canvas ffmpeg jszip axios cheerio moment nodemailer
-
-# Switch back to root for any additional setup if needed
+# Prepare n8n data dir and install node modules as non-root
 USER root
+RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
+
+USER node
+WORKDIR /home/node/.n8n
+RUN npm install --no-audit --no-fund canvas ffmpeg jszip axios cheerio moment nodemailer
+
+# Run container as non-root user
+USER node

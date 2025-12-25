@@ -112,6 +112,39 @@ cp .env.example .env # you should update secrets and passwords inside
 docker compose --profile cpu up
 ```
 
+### Coolify Deployment
+
+This repository is configured for Coolify deployment with the following optimizations:
+
+**Prerequisites:**
+1. Push your repository to Git (GitHub, GitLab, etc.)
+2. Have a Coolify instance running
+3. Generate secure secrets with `openssl rand -base64 32`
+
+**Deployment Steps:**
+
+1. In Coolify, create a new project and select your repository
+2. Set the build type to **Docker Compose**
+3. Configure environment variables in Coolify:
+   ```
+   POSTGRES_USER=n8n
+   POSTGRES_PASSWORD=<your-secure-password>
+   POSTGRES_DB=n8n
+   N8N_ENCRYPTION_KEY=<your-32-char-encryption-key>
+   N8N_USER_MANAGEMENT_JWT_SECRET=<your-32-char-jwt-secret>
+   SERVICE_URL_N8N=https://n8n.yourdomain.com
+   MINIO_ROOT_USER=minioadmin
+   MINIO_ROOT_PASSWORD=<your-secure-password>
+   ```
+4. Set your domain (e.g., `n8n.yourdomain.com`) in Coolify
+5. Deploy
+
+**Notes:**
+- Only port 5678 (n8n) is exposed publicly
+- Ollama, Qdrant, and MinIO are accessible only via internal Docker networking
+- CPU-based deployment is used by default (GPU profiles are commented out)
+- Health checks are enabled for automatic monitoring
+
 ## ⚡️ Quick start and usage
 
 The core of the Self-hosted AI Starter Kit is a Docker Compose file, pre-configured with network and storage settings, minimizing the need for additional installations.

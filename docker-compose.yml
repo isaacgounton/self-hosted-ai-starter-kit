@@ -40,8 +40,10 @@ x-ollama: &service-ollama
   container_name: ollama
   networks: ['n8n-ai-network']
   restart: unless-stopped
-  ports:
-    - 11434:11434
+  # Port removed - only accessible internally via n8n-ai-network
+  # Uncomment to expose publicly for debugging:
+  # ports:
+  #   - 11434:11434
   volumes:
     - ollama_storage:/root/.ollama
 
@@ -101,6 +103,12 @@ services:
       - n8n_storage:/home/node/.n8n
       - ./n8n/demo-data:/demo-data
       - ./shared:/data/shared
+    healthcheck:
+      test: ['CMD-SHELL', 'wget --no-verbose --tries=1 --spider http://localhost:5678/healthz || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     depends_on:
       postgres:
         condition: service_healthy
@@ -113,8 +121,10 @@ services:
     container_name: qdrant
     networks: ['n8n-ai-network']
     restart: unless-stopped
-    ports:
-      - 6333:6333
+    # Port removed - only accessible internally via n8n-ai-network
+    # Uncomment to expose publicly for debugging:
+    # ports:
+    #   - 6333:6333
     volumes:
       - qdrant_storage:/qdrant/storage
 
@@ -124,9 +134,11 @@ services:
     container_name: minio
     networks: ['n8n-ai-network']
     restart: unless-stopped
-    ports:
-      - 9000:9000
-      - 9001:9001
+    # Ports removed - only accessible internally via n8n-ai-network
+    # Uncomment to expose publicly for debugging:
+    # ports:
+    #   - 9000:9000
+    #   - 9001:9001
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
@@ -136,44 +148,33 @@ services:
       - minio_storage:/data
     command: server /data --console-address ":9001"
 
+  # Default CPU-based Ollama (runs automatically for Coolify)
   ollama-cpu:
-    profiles: ["cpu"]
     <<: *service-ollama
 
-  ollama-gpu:
-    profiles: ["gpu-nvidia"]
-    <<: *service-ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+  # GPU profiles - requires special Coolify configuration with GPU support
+  # Uncomment below if your Coolify instance has GPU support
+  # ollama-gpu:
+  #   profiles: ["gpu-nvidia"]
+  #   <<: *service-ollama
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+  #
+  # ollama-gpu-amd:
+  #   profiles: ["gpu-amd"]
+  #   <<: *service-ollama
+  #   image: ollama/ollama:rocm
+  #   devices:
+  #     - "/dev/kfd"
+  #     - "/dev/dri"
 
-  ollama-gpu-amd:
-    profiles: ["gpu-amd"]
-    <<: *service-ollama
-    image: ollama/ollama:rocm
-    devices:
-      - "/dev/kfd"
-      - "/dev/dri"
-
+  # Auto-pull default model for CPU
   ollama-pull-llama-cpu:
-    profiles: ["cpu"]
     <<: *init-ollama
     depends_on:
       - ollama-cpu
-
-  ollama-pull-llama-gpu:
-    profiles: ["gpu-nvidia"]
-    <<: *init-ollama
-    depends_on:
-      - ollama-gpu
-
-  ollama-pull-llama-gpu-amd:
-    profiles: [gpu-amd]
-    <<: *init-ollama
-    image: ollama/ollama:rocm
-    depends_on:
-     - ollama-gpu-amd
