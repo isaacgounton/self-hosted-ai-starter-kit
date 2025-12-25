@@ -1,13 +1,12 @@
-# Custom n8n Dockerfile with canvas support
-FROM n8nio/n8n:latest
+# Custom n8n Dockerfile with canvas and ffmpeg support
+# Use the official n8n registry
+FROM docker.n8n.io/n8nio/n8n:latest
 
-# Install system dependencies for canvas
+# Switch to root to install system packages
 USER root
-# Enable community repository for ffmpeg (detect Alpine version dynamically)
-RUN sed -i 's/http:\/\/dl-cdn.alpinelinux.org\/alpine/http:\/\/dl-cdn.alpinelinux.org\/alpine/' /etc/apk/repositories && \
-    echo "$(cat /etc/apk/repositories | head -1 | sed 's/main/community/')" >> /etc/apk/repositories && \
-    apk update && \
-    apk add --no-cache \
+
+# Install system dependencies for canvas and ffmpeg
+RUN apk add --no-cache \
   build-base \
   g++ \
   cairo-dev \
@@ -21,10 +20,10 @@ RUN sed -i 's/http:\/\/dl-cdn.alpinelinux.org\/alpine/http:\/\/dl-cdn.alpinelinu
   pkgconfig \
   ffmpeg
 
-# Prepare n8n data dir and install node modules as non-root
-USER root
+# Prepare n8n data directory
 RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
 
+# Switch to node user and install npm packages
 USER node
 WORKDIR /home/node/.n8n
 RUN npm install --no-audit --no-fund canvas ffmpeg jszip axios cheerio moment nodemailer
