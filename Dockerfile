@@ -1,17 +1,13 @@
-# n8n with FFmpeg, Python, and Canvas support
-# Base image: https://github.com/RxChi1d/n8n-ffmpeg
-# Docker Hub: https://hub.docker.com/r/rxchi1d/n8n-ffmpeg
-
-FROM rxchi1d/n8n-ffmpeg:latest
+# n8n with FFmpeg and Canvas support
+# Based on official n8n image
+FROM docker.n8n.io/n8nio/n8n:latest
 
 # Switch to root to install system packages
 USER root
 
-# Install Python3 for Python task runner
-RUN apk add --no-cache python3 py3-pip
-
-# Install canvas dependencies
+# Install FFmpeg and canvas build dependencies
 RUN apk add --no-cache \
+  ffmpeg \
   build-base \
   g++ \
   cairo-dev \
