@@ -1,15 +1,13 @@
-# n8n with FFmpeg and Canvas support
+# n8n with Canvas support
 # Based on official n8n image
+# FFmpeg removed due to Alpine compatibility issues - can be added later via external service
 FROM docker.n8n.io/n8nio/n8n:latest
 
 # Switch to root to install system packages
 USER root
 
-# Enable community repository and install FFmpeg and canvas dependencies
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/v$(cat /etc/alpine-release | cut -d'.' -f1,2)/community" >> /etc/apk/repositories && \
-    apk update && \
-    apk add --no-cache \
-  ffmpeg \
+# Install canvas build dependencies
+RUN apk add --no-cache \
   build-base \
   g++ \
   cairo-dev \
