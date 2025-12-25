@@ -5,8 +5,10 @@ FROM docker.n8n.io/n8nio/n8n:latest
 # Switch to root to install system packages
 USER root
 
-# Install FFmpeg and canvas build dependencies
-RUN apk add --no-cache \
+# Enable community repository and install FFmpeg and canvas dependencies
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/v$(cat /etc/alpine-release | cut -d'.' -f1,2)/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache \
   ffmpeg \
   build-base \
   g++ \
