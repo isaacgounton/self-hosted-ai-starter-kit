@@ -21,12 +21,15 @@ RUN apk add --no-cache \
 # Prepare n8n data directory
 RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
 
-# Switch to node user and install npm packages
+# Switch to node user and install npm packages in n8n directory
 USER node
-WORKDIR /home/node/.n8n
+WORKDIR /usr/local/lib/node_modules/n8n
 
-# Install canvas and other npm packages
+# Install canvas and other npm packages in n8n's node_modules
 RUN npm install --no-audit --no-fund canvas jszip axios cheerio moment nodemailer
+
+# Switch back to n8n data directory
+WORKDIR /home/node/.n8n
 
 # Run container as non-root user
 USER node
