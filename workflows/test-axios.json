@@ -1,0 +1,20 @@
+{
+  "name": "Test: HTTP Requests with Axios",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const axios = require('axios');\n\n// Test 1: Fetch a random joke from public API\nconst response = await axios.get('https://official-joke-api.appspot.com/random_joke');\n\n// Test 2: Get IP info\nconst ipResponse = await axios.get('https://api.ipify.org?format=json');\n\nreturn {\n  joke: {\n    setup: response.data.setup,\n    punchline: response.data.punchline\n  },\n  yourIP: ipResponse.data.ip,\n  axiosStatus: 'Working ✓',\n  httpStatus: response.status\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [432, 200],
+      "id": "test-axios",
+      "name": "Test Axios"
+    }
+  ],
+  "connections": {},
+  "pinData": {},
+  "meta": {
+    "templateId": "1"
+  }
+}

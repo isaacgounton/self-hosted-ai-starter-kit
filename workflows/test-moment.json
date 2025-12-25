@@ -1,0 +1,20 @@
+{
+  "name": "Test: Date/Time with Moment",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const moment = require('moment');\n\nconst now = moment();\n\nreturn {\n  current: {\n    full: now.format('YYYY-MM-DD HH:mm:ss'),\n    iso: now.toISOString(),\n    unix: now.unix(),\n    readable: now.format('dddd, MMMM Do, YYYY'),\n    relative: now.fromNow()\n  },\n  calculations: {\n    nextWeek: now.add(7, 'days').format('YYYY-MM-DD'),\n    lastMonth: now.subtract(1, 'month').format('YYYY-MM-DD'),\n    startOfYear: now.startOf('year').format('YYYY-MM-DD'),\n    endOfMonth: now.endOf('month').format('YYYY-MM-DD')\n  },\n  formats: {\n    timeOnly: now.format('LT'),\n    dateOnly: now.format('L'),\n    calendar: now.calendar()\n  },\n  momentStatus: 'Working ✓'\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [432, 200],
+      "id": "test-moment",
+      "name": "Test Moment"
+    }
+  ],
+  "connections": {},
+  "pinData": {},
+  "meta": {
+    "templateId": "1"
+  }
+}

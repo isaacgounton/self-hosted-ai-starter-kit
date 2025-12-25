@@ -1,0 +1,20 @@
+{
+  "name": "Test: FFmpeg Video Processing",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const { execSync } = require('child_process');\n\ntry {\n  const version = execSync('ffmpeg -version', { encoding: 'utf-8' });\n  const versionLines = version.split('\\n').slice(0, 3);\n  \n  return {\n    ffmpegStatus: 'Working ✓',\n    version: versionLines.join('\\n'),\n    exampleCommand: 'ffmpeg -i input.mp4 -vf scale=320:240 output.mp4',\n    docLink: 'https://ffmpeg.org/documentation.html'\n  };\n} catch (error) {\n  return {\n    error: 'FFmpeg not found',\n    message: error.message\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [432, 200],
+      "id": "test-ffmpeg",
+      "name": "Test FFmpeg"
+    }
+  ],
+  "connections": {},
+  "pinData": {},
+  "meta": {
+    "templateId": "1"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Test: Image Processing with Sharp",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const sharp = require('sharp');\nconst fs = require('fs');\n\nconst testImagePath = '/tmp/sharp-test.png';\nconst resizedPath = '/tmp/sharp-test-resized.png';\n\ntry {\n  // Create test image (100x100 blue square)\n  await sharp({\n    create: {\n      width: 100,\n      height: 100,\n      channels: 3,\n      background: { r: 0, g: 100, b: 255 }\n    }\n  })\n  .png()\n  .toFile(testImagePath);\n\n  const metadata = await sharp(testImagePath).metadata();\n\n  // Resize to 50x50\n  await sharp(testImagePath)\n    .resize(50, 50)\n    .png()\n    .toFile(resizedPath);\n\n  const resizedMetadata = await sharp(resizedPath).metadata();\n\n  // Clean up\n  fs.unlinkSync(testImagePath);\n  fs.unlinkSync(resizedPath);\n\n  return {\n    test: 'Created 100x100 blue image and resized to 50x50',\n    original: {\n      width: metadata.width,\n      height: metadata.height,\n      size: metadata.size + ' bytes',\n      format: metadata.format\n    },\n    resized: {\n      width: resizedMetadata.width,\n      height: resizedMetadata.height,\n      size: resizedMetadata.size + ' bytes'\n    },\n    sharpStatus: 'Working ✓ - Ready to process real images!'\n  };\n} catch (error) {\n  return {\n    error: error.message,\n    sharpStatus: 'Error - Check if vips-dev is installed'\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [432, 200],
+      "id": "test-sharp",
+      "name": "Test Sharp"
+    }
+  ],
+  "connections": {},
+  "pinData": {},
+  "meta": {
+    "templateId": "1"
+  }
+}

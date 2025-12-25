@@ -1,0 +1,20 @@
+{
+  "name": "Test: Web Scraping with Cheerio",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const axios = require('axios');\nconst cheerio = require('cheerio');\n\n// Fetch example.com\nconst response = await axios.get('https://example.com');\nconst $ = cheerio.load(response.data);\n\n// Scrape data\nconst title = $('h1').text();\nconst paragraph = $('p').first().text();\nconst linkCount = $('a').length;\nconst headingCount = $('h1, h2, h3').length;\n\nreturn {\n  url: 'https://example.com',\n  title: title || 'No title found',\n  firstParagraph: paragraph.substring(0, 100) + '...',\n  stats: {\n    links: linkCount,\n    headings: headingCount\n  },\n  cheerioStatus: 'Working ✓'\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [432, 200],
+      "id": "test-cheerio",
+      "name": "Test Cheerio"
+    }
+  ],
+  "connections": {},
+  "pinData": {},
+  "meta": {
+    "templateId": "1"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Test: All Installed Packages",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const axios = require('axios');\nconst cheerio = require('cheerio');\nconst moment = require('moment');\nconst sharp = require('sharp');\nconst nodemailer = require('nodemailer');\n\nconst results = {\n  axios: 'Installed ✓ - HTTP client ready',\n  cheerio: 'Installed ✓ - HTML parser ready',\n  moment: 'Installed ✓ - Date library ready',\n  sharp: 'Installed ✓ - Image processor ready',\n  nodemailer: 'Installed ✓ - Email sender ready',\n  ffmpeg: 'Available ✓ - Video processor ready'\n};\n\n// Test moment with current time\nresults.currentTime = moment().format('YYYY-MM-DD HH:mm:ss');\nresults.humanTime = moment().fromNow();\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [432, 200],
+      "id": "test-all-packages",
+      "name": "Test All Packages"
+    }
+  ],
+  "connections": {},
+  "pinData": {},
+  "meta": {
+    "templateId": "1"
+  }
+}

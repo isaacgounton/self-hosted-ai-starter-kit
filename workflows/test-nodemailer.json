@@ -1,0 +1,20 @@
+{
+  "name": "Test: Email with Nodemailer",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const nodemailer = require('nodemailer');\n\n// Create test transporter configuration\nconst transporter = nodemailer.createTransport({\n  host: 'smtp.example.com',\n  port: 587,\n  secure: false\n});\n\n// Test email structure\nconst testEmail = {\n  from: 'test@example.com',\n  to: 'recipient@example.com',\n  subject: 'Test Email from n8n',\n  text: 'This is a test email to verify nodemailer is working!',\n  html: '<h1>Test Email</h1><p>Nodemailer is ready to send emails!</p>'\n};\n\nreturn {\n  nodemailerStatus: 'Working ✓',\n  testEmailConfig: testEmail,\n  exampleSMTP: {\n    gmail: {\n      host: 'smtp.gmail.com',\n      port: 465,\n      secure: true,\n      auth: {\n        user: 'your-email@gmail.com',\n        pass: 'your-app-password'\n      }\n    },\n    outlook: {\n      host: 'smtp-mail.outlook.com',\n      port: 587,\n      secure: false,\n      auth: {\n        user: 'your-email@outlook.com',\n        pass: 'your-password'\n      }\n    }\n  },\n  note: 'Configure real SMTP credentials to actually send emails',\n  gmailHelp: 'https://support.google.com/accounts/answer/185833'\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [432, 200],
+      "id": "test-nodemailer",
+      "name": "Test Nodemailer"
+    }
+  ],
+  "connections": {},
+  "pinData": {},
+  "meta": {
+    "templateId": "1"
+  }
+}
