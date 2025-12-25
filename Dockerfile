@@ -1,32 +1,17 @@
-# Custom n8n Dockerfile with canvas and ffmpeg support
-# Use the official n8n registry
-FROM docker.n8n.io/n8nio/n8n:latest
+# n8n with FFmpeg support
+# This Dockerfile uses a pre-built image that includes FFmpeg
+# Source: https://github.com/RxChi1d/n8n-ffmpeg
+# Docker Hub: https://hub.docker.com/r/rxchi1d/n8n-ffmpeg
 
-# Switch to root to install system packages
-USER root
+FROM rxchi1d/n8n-ffmpeg:latest
 
-# Install system dependencies for canvas and ffmpeg
-RUN apk add --no-cache \
-  build-base \
-  g++ \
-  cairo-dev \
-  pango-dev \
-  giflib-dev \
-  libjpeg-turbo-dev \
-  librsvg-dev \
-  python3 \
-  make \
-  pixman-dev \
-  pkgconfig \
-  ffmpeg
+# The image already includes FFmpeg and is based on official n8n
+# No additional packages needed
 
-# Prepare n8n data directory
-RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node/.n8n
-
-# Switch to node user and install npm packages
 USER node
 WORKDIR /home/node/.n8n
-RUN npm install --no-audit --no-fund canvas ffmpeg jszip axios cheerio moment nodemailer
 
-# Run container as non-root user
+# Install additional npm packages for canvas support
+RUN npm install --no-audit --no-fund canvas jszip axios cheerio moment nodemailer
+
 USER node

@@ -9,7 +9,7 @@ networks:
   n8n-ai-network:
 
 x-n8n: &service-n8n
-  build: .
+  image: rxchi1d/n8n-ffmpeg:latest
   networks: ['n8n-ai-network']
   environment:
     - DB_TYPE=postgresdb
