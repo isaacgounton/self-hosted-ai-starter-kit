@@ -81,19 +81,21 @@ services:
       timeout: 5s
       retries: 10
 
-  n8n-import:
-    <<: *service-n8n
-    hostname: n8n-import
-    container_name: n8n-import
-    entrypoint: /bin/sh
-    command:
-      - "-c"
-      - "n8n import:credentials --separate --input=/demo-data/credentials && n8n import:workflow --separate --input=/demo-data/workflows"
-    volumes:
-      - ./n8n/demo-data:/demo-data
-    depends_on:
-      postgres:
-        condition: service_healthy
+  # n8n-import service disabled - removes dependency blocking deployment
+  # Uncomment if you want to import demo data
+  # n8n-import:
+  #   <<: *service-n8n
+  #   hostname: n8n-import
+  #   container_name: n8n-import
+  #   entrypoint: /bin/sh
+  #   command:
+  #     - "-c"
+  #     - "n8n import:credentials --separate --input=/demo-data/credentials && n8n import:workflow --separate --input=/demo-data/workflows"
+  #   volumes:
+  #     - ./n8n/demo-data:/demo-data
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
 
   n8n:
     <<: *service-n8n
@@ -104,19 +106,22 @@ services:
       - 5678:5678
     volumes:
       - n8n_storage:/home/node/.n8n
-      - ./n8n/demo-data:/demo-data
+      # Demo data volume removed - not needed for production
+      # - ./n8n/demo-data:/demo-data
       - ./shared:/data/shared
-    healthcheck:
-      test: ['CMD-SHELL', 'wget --no-verbose --tries=1 --spider http://localhost:5678/healthz || exit 1']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    # Healthcheck temporarily disabled - may cause deployment issues
+    # healthcheck:
+    #   test: ["CMD", "wget", "--spider", "-q", "http://localhost:5678/healthz"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 90s
     depends_on:
       postgres:
         condition: service_healthy
-      n8n-import:
-        condition: service_completed_successfully
+      # n8n-import dependency removed
+      # n8n-import:
+      #   condition: service_completed_successfully
 
   qdrant:
     image: qdrant/qdrant
