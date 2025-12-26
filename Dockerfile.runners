@@ -1,23 +1,61 @@
-# Dockerfile for n8n runners with additional Python packages
-# Multi-stage build to add FFmpeg
-FROM alpine:latest as ffmpeg-builder
-RUN apk add --no-cache ffmpeg
-RUN mkdir -p /ffmpeg-copy/bin /ffmpeg-copy/lib && \
-    cp /usr/bin/ffmpeg /usr/bin/ffprobe /ffmpeg-copy/bin/ && \
-    cp /lib/ld-musl-x86_64.so.1 /ffmpeg-copy/lib/ && \
-    ldd /usr/bin/ffmpeg | grep '=> /' | awk '{print $3}' | xargs -I {} cp {} /ffmpeg-copy/lib/ || true
+# Dockerfile for n8n runners with FFmpeg, Canvas, and Python packages
+# Multi-stage build using Alpine to match n8nio/runners' musl libc
+FROM alpine:latest as dependencies-builder
+
+# Install build dependencies
+RUN apk add --no-cache \
+    ffmpeg \
+    build-base \
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    giflib-dev \
+    librsvg-dev \
+    pixman-dev \
+    freetype-dev \
+    fontconfig-dev \
+    harfbuzz-dev \
+    nodejs \
+    npm \
+    python3 \
+    py3-pip \
+    gcc \
+    musl-dev
+
+RUN mkdir -p /copy/bin /copy/lib /copy/canvas
+
+# Copy FFmpeg binaries and libraries
+RUN cp /usr/bin/ffmpeg /usr/bin/ffprobe /copy/bin/ && \
+    # Copy FFmpeg shared libraries
+    ldd /usr/bin/ffmpeg 2>/dev/null | \
+    grep '=> /usr/lib' | awk '{print $3}' | \
+    xargs -I {} cp {} /copy/lib/ 2>/dev/null || true
+
+# Build canvas with all dependencies
+RUN mkdir -p /tmp/canvas-build && \
+    cd /tmp/canvas-build && \
+    npm init -y && \
+    npm install canvas --build-from-source && \
+    mkdir -p /copy/canvas && \
+    cp -r node_modules/canvas/* /copy/canvas/ && \
+    # Copy canvas.node dependencies, excluding libc/gcompat libraries
+    ldd node_modules/canvas/build/Release/canvas.node 2>/dev/null | \
+    grep '=> /' | awk '{print $3}' | \
+    grep -v -E '(libc\.musl|libgcompat|libstdc\+\+|libgcc_s|libresolv)' | \
+    xargs -I {} cp {} /copy/lib/ 2>/dev/null || true && \
+    rm -rf /tmp/canvas-build
 
 FROM n8nio/runners:latest
 
 # Switch to root to install packages
 USER root
 
-# Copy FFmpeg and libraries from builder stage
-COPY --from=ffmpeg-builder /ffmpeg-copy/ /usr/local/
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+# Copy dependencies from builder stage
+COPY --from=dependencies-builder /copy/ /usr/local/
 ENV PATH=/usr/local/bin:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
-# Install additional Python packages using uv
+# Install Python packages using uv
 RUN uv pip install --system \
     numpy \
     pandas \
@@ -33,6 +71,16 @@ RUN uv pip install --system \
     pyyaml \
     pytz \
     && uv cache clean
+
+# Install JavaScript packages and copy pre-built canvas
+RUN cd /opt/runners/task-runner-javascript && \
+    pnpm add \
+    axios \
+    cheerio \
+    jszip \
+    nodemailer && \
+    rm -rf node_modules/canvas && \
+    cp -r /usr/local/canvas node_modules/canvas
 
 # Switch back to runner user
 USER runner
