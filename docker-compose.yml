@@ -29,6 +29,7 @@ x-n8n: &service-n8n
     - 'NODE_FUNCTION_ALLOW_EXTERNAL=axios,cheerio,moment,canvas,ffmpeg,jszip,nodemailer'
     - N8N_RUNNERS_ENABLED=true
     - N8N_RUNNERS_MODE=external
+    - N8N_RUNNERS_BROKER_LISTEN_ADDRESS=0.0.0.0
     - N8N_REINSTALL_MISSING_PACKAGES=true
     - GENERIC_TIMEZONE=America/Toronto
   env_file:
@@ -73,6 +74,7 @@ services:
     restart: unless-stopped
     ports:
       - 5678:5678
+      - 5679:5679
     volumes:
       - n8n_storage:/home/node/.n8n
       - ./n8n/demo-data:/demo-data
@@ -93,7 +95,7 @@ services:
     restart: unless-stopped
     environment:
       - N8N_RUNNERS_MODE=external
-      - N8N_RUNNERS_N8N_URI=http://n8n:5678/
+      - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
     env_file:
       - .env

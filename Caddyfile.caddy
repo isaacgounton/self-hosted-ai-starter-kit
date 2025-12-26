@@ -1,0 +1,16 @@
+# Dynamic Caddy config: use container names on Docker network
+n8n.daho.ai {
+    reverse_proxy n8n:5678
+}
+
+qdrant.daho.ai {
+    reverse_proxy qdrant:6333
+}
+
+minio.daho.ai {
+    reverse_proxy minio:9000
+}
+
+minio-console.daho.ai {
+    reverse_proxy minio:9001
+}
