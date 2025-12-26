@@ -93,10 +93,16 @@ services:
     container_name: n8n-runners
     networks: ['n8n-ai-network']
     restart: unless-stopped
+    volumes:
+      - ./n8n-task-runners.json:/etc/n8n-task-runners.json:ro
     environment:
       - N8N_RUNNERS_MODE=external
       - N8N_RUNNERS_TASK_BROKER_URI=http://n8n:5679
       - N8N_RUNNERS_AUTH_TOKEN=${N8N_RUNNERS_AUTH_TOKEN}
+      # Python standard library modules allowed (must match allowed-env in JSON)
+      - N8N_RUNNERS_STDLIB_ALLOW=*
+      # Python external packages allowed (must match allowed-env in JSON)
+      - N8N_RUNNERS_EXTERNAL_ALLOW=*
     env_file:
       - .env
     depends_on:

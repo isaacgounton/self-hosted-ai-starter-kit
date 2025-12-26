@@ -1,0 +1,29 @@
+{
+  "name": "Python Cryptography Examples",
+  "nodes": [
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Hash a string with SHA256\nimport hashlib\nimport json\n\ndef hash_string(text, algorithm='sha256'):\n    \"\"\"Hash a string using specified algorithm\"\"\"\n    hash_obj = hashlib.new(algorithm)\n    hash_obj.update(text.encode('utf-8'))\n    return hash_obj.hexdigest()\n\ndef hash_file(content, algorithm='sha256'):\n    \"\"\"Hash file content\"\"\"\n    hash_obj = hashlib.new(algorithm)\n    hash_obj.update(content.encode('utf-8'))\n    return hash_obj.hexdigest()\n\ndef hmac_signature(message, secret):\n    \"\"\"Create HMAC signature for API authentication\"\"\"\n    import hmac\n    signature = hmac.new(\n        secret.encode('utf-8'),\n        message.encode('utf-8'),\n        hashlib.sha256\n    ).hexdigest()\n    return signature\n\ndef generate_secure_token(length=32):\n    \"\"\"Generate cryptographically secure random token\"\"\"\n    import secrets\n    import string\n    alphabet = string.ascii_letters + string.digits + \"-_\"\n    token = ''.join(secrets.choice(alphabet) for _ in range(length))\n    return token\n\ndef generate_uuid():\n    \"\"\"Generate UUID (unique identifier)\"\"\"\n    import uuid\n    return {\n        'uuid4': str(uuid.uuid4()),\n        'uuid4_hex': uuid.uuid4().hex,\n        'uuid4_urn': uuid.uuid4().urn\n    }\n\n# Examples\ntext_to_hash = \"Hello, n8n!\"\nsecret_key = \"my-secret-key\"\n\nresults = {\n    'text': text_to_hash,\n    'hashes': {\n        'md5': hash_string(text_to_hash, 'md5'),\n        'sha1': hash_string(text_to_hash, 'sha1'),\n        'sha256': hash_string(text_to_hash, 'sha256'),\n        'sha512': hash_string(text_to_hash, 'sha512')\n    },\n    'hmac': {\n        'message': text_to_hash,\n        'signature': hmac_signature(text_to_hash, secret_key)\n    },\n    'secure_token': generate_secure_token(32),\n    'uuid': generate_uuid()\n}\n\nreturn results"
+      },
+      "id": "b2c3d4e5-6f7g-8h9i-0j1k-l2m3n4o5p6q7",
+      "name": "Cryptography Examples",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Password hashing and verification\nimport hashlib\nimport secrets\nimport hmac\n\ndef generate_password_hash(password, salt=None):\n    \"\"\"Generate secure password hash with salt\"\"\"\n    if salt is None:\n        salt = secrets.token_hex(16)\n    \n    # Use PBKDF2 for password hashing (more secure than SHA256)\n    iterations = 100000\n    dk = hashlib.pbkdf2_hmac('sha256',\n                          password.encode('utf-8'),\n                          salt.encode('utf-8'),\n                          iterations)\n    \n    return {\n        'hash': dk.hex(),\n        'salt': salt,\n        'iterations': iterations\n    }\n\ndef verify_password(password, stored_hash, salt, iterations=100000):\n    \"\"\"Verify password against stored hash\"\"\"\n    dk = hashlib.pbkdf2_hmac('sha256',\n                          password.encode('utf-8'),\n                          salt.encode('utf-8'),\n                          iterations)\n    \n    return hmac.compare_digest(dk.hex(), stored_hash)\n\n# Example usage\npassword = \"SecurePassword123!\"\nstored = generate_password_hash(password)\n\nresults = {\n    'original_password': password,\n    'stored': stored,\n    'verification': {\n        'correct': verify_password(password, stored['hash'], stored['salt']),\n        'wrong': verify_password('WrongPassword', stored['hash'], stored['salt'])\n    },\n    'new_secure_password': secrets.token_urlsafe(16)\n}\n\nreturn results"
+      },
+      "id": "c3d4e5f6-7g8h-9i0j-1k2l-m3n4o5p6q7r8",
+      "name": "Password Hashing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 300]
+    }
+  ],
+  "connections": {},
+  "pinData": {}
+}

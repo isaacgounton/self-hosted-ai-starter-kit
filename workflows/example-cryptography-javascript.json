@@ -1,0 +1,18 @@
+{
+  "name": "JavaScript Crypto Examples",
+  "nodes": [
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Node.js built-in crypto module examples\nconst crypto = require('crypto');\n\n// Example 1: Hash a string with SHA256\nfunction hashString(text, algorithm = 'sha256') {\n  return crypto\n    .createHash(algorithm)\n    .update(text)\n    .digest('hex');\n}\n\n// Example 2: HMAC signature for API authentication\nfunction createHMAC(message, secret, algorithm = 'sha256') {\n  return crypto\n    .createHmac(algorithm, secret)\n    .update(message)\n    .digest('hex');\n}\n\n// Example 3: Generate random token\nfunction generateToken(length = 32) {\n  return crypto\n    .randomBytes(Math.ceil(length / 2))\n    .toString('hex')\n    .slice(0, length);\n}\n\n// Example 4: Encrypt with AES-256-GCM\nfunction encrypt(text, password) {\n  const algorithm = 'aes-256-gcm';\n  const key = crypto.scryptSync(password, 'salt', 32);\n  const iv = crypto.randomBytes(16);\n  const cipher = crypto.createCipheriv(algorithm, key, iv);\n  \n  let encrypted = cipher.update(text, 'utf8', 'hex');\n  encrypted += cipher.final('hex');\n  \n  const authTag = cipher.getAuthTag();\n  \n  return {\n    encrypted: encrypted,\n    iv: iv.toString('hex'),\n    authTag: authTag.toString('hex')\n  };\n}\n\n// Example 5: Create UUID\nfunction generateUUID() {\n  return crypto.randomUUID();\n}\n\n// Run examples\nconst text = 'Hello, n8n with JavaScript!';\nconst password = 'my-secret-key';\n\nconst results = {\n  hashes: {\n    md5: hashString(text, 'md5'),\n    sha1: hashString(text, 'sha1'),\n    sha256: hashString(text, 'sha256'),\n    sha512: hashString(text, 'sha512')\n  },\n  hmac: createHMAC(text, 'secret-key'),\n  random: {\n    token32: generateToken(32),\n    token16: generateToken(16),\n    uuid: generateUUID()\n  },\n  encrypted: encrypt(text, password)\n};\n\nreturn results;"
+      },
+      "id": "a1b2c3d4-5e6f-7g8h-9i0j-k1l2m3n4o5p6",
+      "name": "JavaScript Crypto (Built-in)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 300]
+    }
+  ],
+  "connections": {},
+  "pinData": {}
+}

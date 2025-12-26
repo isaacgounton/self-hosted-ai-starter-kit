@@ -1,8 +1,21 @@
 # Dockerfile for n8n runners with additional Python packages
+# Multi-stage build to add FFmpeg
+FROM alpine:latest as ffmpeg-builder
+RUN apk add --no-cache ffmpeg
+RUN mkdir -p /ffmpeg-copy/bin /ffmpeg-copy/lib && \
+    cp /usr/bin/ffmpeg /usr/bin/ffprobe /ffmpeg-copy/bin/ && \
+    cp /lib/ld-musl-x86_64.so.1 /ffmpeg-copy/lib/ && \
+    ldd /usr/bin/ffmpeg | grep '=> /' | awk '{print $3}' | xargs -I {} cp {} /ffmpeg-copy/lib/ || true
+
 FROM n8nio/runners:latest
 
 # Switch to root to install packages
 USER root
+
+# Copy FFmpeg and libraries from builder stage
+COPY --from=ffmpeg-builder /ffmpeg-copy/ /usr/local/
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+ENV PATH=/usr/local/bin:$PATH
 
 # Install additional Python packages using uv
 RUN uv pip install --system \
@@ -16,6 +29,9 @@ RUN uv pip install --system \
     matplotlib \
     seaborn \
     pillow \
+    cryptography \
+    pyyaml \
+    pytz \
     && uv cache clean
 
 # Switch back to runner user

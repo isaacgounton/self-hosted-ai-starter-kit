@@ -1,0 +1,40 @@
+{
+  "name": "Python File & Data Processing Examples",
+  "nodes": [
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# CSV Processing with Python\nimport csv\nimport io\nimport json\n\ndef process_csv_data(csv_text):\n    \"\"\"Parse CSV text and return as JSON\"\"\"\n    # Create a file-like object from CSV text\n    csv_file = io.StringIO(csv_text)\n    \n    # Read CSV\n    reader = csv.DictReader(csv_file)\n    rows = list(reader)\n    \n    # Calculate statistics\n    return {\n        'row_count': len(rows),\n        'columns': list(rows[0].keys()) if rows else [],\n        'data': rows[:5],  # First 5 rows\n        'summary': {\n            'total_rows': len(rows),\n            'total_columns': len(rows[0].keys()) if rows else 0\n        }\n    }\n\ndef create_csv(data):\n    \"\"\"Convert JSON data to CSV format\"\"\"\n    output = io.StringIO()\n    if data:\n        writer = csv.DictWriter(output, fieldnames=data[0].keys())\n        writer.writeheader()\n        writer.writerows(data)\n    \n    return output.getvalue()\n\n# Example CSV data\ncsv_data = '''name,age,city\nAlice,30,New York\nBob,25,San Francisco\nCharlie,35,Chicago\nDiana,28,Boston\n'''\n\nresults = process_csv_data(csv_data)\nreturn results"
+      },
+      "id": "d4e5f6g7-8h9i-0j1k-2l3m-n4o5p6q7r8s9",
+      "name": "CSV Processing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# File operations with pathlib and shutil\nimport pathlib\nimport tempfile\nimport shutil\nimport json\nfrom datetime import datetime\n\ndef create_temp_file(content, prefix='n8n_', suffix='.txt'):\n    \"\"\"Create a temporary file\"\"\"\n    with tempfile.NamedTemporaryFile(\n        mode='w',\n        prefix=prefix,\n        suffix=suffix,\n        delete=False\n    ) as f:\n        f.write(content)\n        temp_path = f.name\n    \n    return {\n        'path': temp_path,\n        'name': pathlib.Path(temp_path).name,\n        'size': len(content)\n    }\n\ndef analyze_path(path):\n    \"\"\"Analyze a file path\"\"\"\n    p = pathlib.Path(path)\n    \n    return {\n        'name': p.name,\n        'stem': p.stem,\n        'suffix': p.suffix,\n        'parent': str(p.parent),\n        'exists': p.exists(),\n        'is_absolute': p.is_absolute(),\n        'parts': list(p.parts)\n    }\n\ndef generate_unique_filename(base_name):\n    \"\"\"Generate unique filename with timestamp\"\"\"\n    import uuid\n    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')\n    unique_id = str(uuid.uuid4())[:8]\n    \n    p = pathlib.Path(base_name)\n    return f\"{p.stem}_{timestamp}_{unique_id}{p.suffix}\"\n\n# Examples\nresults = {\n    'path_analysis': analyze_path('/home/user/documents/file.txt'),\n    'unique_filename': generate_unique_filename('report.pdf'),\n    'temp_dir': tempfile.gettempdir(),\n    'current_time': datetime.now().isoformat()\n}\n\nreturn results"
+      },
+      "id": "e5f6g7h8-9i0j-1k2l-3m4n-o5p6q7r8s9t0",
+      "name": "File Operations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# YAML Configuration Processing\nimport yaml\nimport json\n\ndef parse_yaml_config(yaml_content):\n    \"\"\"Parse YAML configuration file\"\"\"\n    try:\n        config = yaml.safe_load(yaml_content)\n        return {\n            'success': True,\n            'config': config,\n            'keys': list(config.keys()) if isinstance(config, dict) else 'not_a_dict'\n        }\n    except Exception as e:\n        return {\n            'success': False,\n            'error': str(e)\n        }\n\ndef create_yaml_config(data):\n    \"\"\"Convert JSON to YAML\"\"\"\n    try:\n        yaml_content = yaml.dump(data, default_flow_style=False)\n        return {\n            'success': True,\n            'yaml': yaml_content\n        }\n    except Exception as e:\n        return {\n            'success': False,\n            'error': str(e)\n        }\n\n# Example YAML configuration\nexample_yaml = '''\napp:\n  name: \"My Automation\"\n  version: \"1.0.0\"\n  environment: production\n  \ndatabase:\n  host: localhost\n  port: 5432\n  name: mydb\n  \nfeatures:\n  - authentication\n  - logging\n  - monitoring\n  \nthresholds:\n    cpu: 80\n    memory: 70\n    disk: 90\n'''\n\nresults = {\n    'parsed': parse_yaml_config(example_yaml),\n    'yaml_output': create_yaml_config({\n        'service': 'n8n-automation',\n        'replicas': 3,\n        'enabled': True\n    })\n}\n\nreturn results"
+      },
+      "id": "f6g7h8i9-0j1k-2l3m-4n5o-p6q7r8s9t0u1",
+      "name": "YAML Processing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 300]
+    }
+  ],
+  "connections": {},
+  "pinData": {}
+}

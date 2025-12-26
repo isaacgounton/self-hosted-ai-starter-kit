@@ -1,0 +1,18 @@
+{
+  "name": "Python Timezone & Date Utilities",
+  "nodes": [
+    {
+      "parameters": {
+        "language": "pythonNative",
+        "pythonCode": "# Advanced timezone handling with pytz\nfrom datetime import datetime\nimport pytz\nfrom dateutil import parser\nimport json\n\ndef convert_timezone(dt, from_tz, to_tz):\n    \"\"\"Convert datetime between timezones\"\"\"\n    try:\n        # Localize the datetime to source timezone\n        if dt.tzinfo is None:\n            dt = pytz.timezone(from_tz).localize(dt)\n        else:\n            dt = dt.astimezone(pytz.timezone(from_tz))\n        \n        # Convert to target timezone\n        converted = dt.astimezone(pytz.timezone(to_tz))\n        \n        return {\n            'original': dt.isoformat(),\n            'converted': converted.isoformat(),\n            'timezone_abbr': converted.tzname()\n        }\n    except Exception as e:\n        return {'error': str(e)}\n\ndef get_time_in_cities(timezone_str='UTC'):\n    \"\"\"Get current time in multiple major cities\"\"\"\n    utc_now = datetime.now(pytz.UTC)\n    \n    cities = {\n        'New York': 'America/New_York',\n        'London': 'Europe/London',\n        'Paris': 'Europe/Paris',\n        'Tokyo': 'Asia/Tokyo',\n        'Sydney': 'Australia/Sydney',\n        'Dubai': 'Asia/Dubai',\n        'Los Angeles': 'America/Los_Angeles',\n        'Chicago': 'America/Chicago'\n    }\n    \n    results = {}\n    for city, tz in cities.items():\n        try:\n            city_time = utc_now.astimezone(pytz.timezone(tz))\n            results[city] = {\n                'time': city_time.strftime('%H:%M:%S'),\n                'date': city_time.strftime('%Y-%m-%d'),\n                'timezone': tz,\n                'abbreviation': city_time.tzname(),\n                'utc_offset': city_time.strftime('%z')\n            }\n        except Exception as e:\n            results[city] = {'error': str(e)}\n    \n    return results\n\ndef parse_any_date(date_string, timezone='UTC'):\n    \"\"\"Parse date string in any format\"\"\"\n    try:\n        dt = parser.parse(date_string)\n        \n        # Localize to specified timezone\n        if dt.tzinfo is None:\n            dt = pytz.timezone(timezone).localize(dt)\n        \n        return {\n            'parsed': dt.isoformat(),\n            'timestamp': int(dt.timestamp()),\n            'timezone': timezone\n        }\n    except Exception as e:\n        return {'error': str(e)}\n\n# Examples\nresults = {\n    'world_clocks': get_time_in_cities(),\n    'timezone_conversion': convert_timezone(\n        datetime.now(),\n        'UTC',\n        'America/New_York'\n    ),\n    'date_parsing': {\n        'iso_8601': parse_any_date('2024-01-15T10:30:00'),\n        'natural': parse_any_date('January 15, 2024 10:30 AM'),\n        'relative': parse_any_date('2 days ago'),\n        'timestamp': parse_any_date('1705319400')\n    }\n}\n\nreturn results"
+      },
+      "id": "g7h8i9j0-1k2l-3m4n-5o6p-q7r8s9t0u1v2",
+      "name": "Advanced Timezone Handling",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 300]
+    }
+  ],
+  "connections": {},
+  "pinData": {}
+}

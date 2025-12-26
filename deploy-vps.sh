@@ -100,7 +100,7 @@ if command -v rsync &> /dev/null; then
     fi
     
     # Build rsync command with existing directories
-    RSYNC_CMD="rsync -avz --progress -e \"$SSH_OPT\" --exclude 'node_modules' --exclude '.git' --exclude '*.log' docker-compose.yml Dockerfile Dockerfile.runners .env n8n/"
+    RSYNC_CMD="rsync -avz --progress -e \"$SSH_OPT\" --exclude 'node_modules' --exclude '.git' --exclude '*.log' docker-compose.yml Dockerfile Dockerfile.runners n8n-task-runners.json .env n8n/"
     
     # Add directories if they exist
     [ -d "workflows" ] && RSYNC_CMD="$RSYNC_CMD workflows/"
@@ -110,9 +110,9 @@ if command -v rsync &> /dev/null; then
 else
     # Fallback to scp
     if [ -n "$VPS_PASSWORD" ]; then
-        SCP_CMD="sshpass -p '${VPS_PASSWORD}' scp -o StrictHostKeyChecking=no -P ${VPS_PORT} -r docker-compose.yml Dockerfile Dockerfile.runners .env n8n/"
+        SCP_CMD="sshpass -p '${VPS_PASSWORD}' scp -o StrictHostKeyChecking=no -P ${VPS_PORT} -r docker-compose.yml Dockerfile Dockerfile.runners n8n-task-runners.json .env n8n/"
     else
-        SCP_CMD="scp -i ${VPS_SSH_KEY} -o StrictHostKeyChecking=no -o PasswordAuthentication=no -P ${VPS_PORT} -r docker-compose.yml Dockerfile Dockerfile.runners .env n8n/"
+        SCP_CMD="scp -i ${VPS_SSH_KEY} -o StrictHostKeyChecking=no -o PasswordAuthentication=no -P ${VPS_PORT} -r docker-compose.yml Dockerfile Dockerfile.runners n8n-task-runners.json .env n8n/"
     fi
     
     # Add directories if they exist
