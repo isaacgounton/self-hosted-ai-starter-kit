@@ -1,0 +1,22 @@
+# Dockerfile for n8n runners with additional Python packages
+FROM n8nio/runners:latest
+
+# Switch to root to install packages
+USER root
+
+# Install additional Python packages using uv
+RUN uv pip install --system \
+    numpy \
+    pandas \
+    requests \
+    beautifulsoup4 \
+    lxml \
+    openpyxl \
+    xlrd \
+    matplotlib \
+    seaborn \
+    pillow \
+    && uv cache clean
+
+# Switch back to runner user
+USER runner
