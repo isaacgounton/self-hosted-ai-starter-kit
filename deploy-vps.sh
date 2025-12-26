@@ -1,14 +1,16 @@
 #!/bin/bash
 
 # ============================================================
-# VPS Deployment Script for n8n AI Starter Kit
+# Simple VPS Deployment Script for n8n AI Starter Kit
+# This script deploys the app to your VPS via SSH
+# Caddy must be configured manually
 # ============================================================
 
-set -e  # Exit on error
+set -e
 
 # Load environment variables
 if [ ! -f .env ]; then
-    echo "Error: .env file not found!"
+    echo "❌ Error: .env file not found!"
     exit 1
 fi
 
@@ -16,54 +18,59 @@ source .env
 
 # VPS Configuration
 VPS_HOST="${VPS_HOST}"
-VPS_USER="${VPS_SSH_USER}"
+VPS_USER="${VPS_SSH_USER:-root}"
+VPS_PASSWORD="${VPS_PASSWORD}"
 VPS_SSH_KEY="${VPS_SSH_KEY_PATH:-~/.ssh/id_rsa}"
 VPS_PORT="${VPS_PORT:-22}"
-
-# Deployment Configuration
 REMOTE_DIR="/opt/n8n-ai-starter-kit"
-DOMAIN="daho.ai"
-APP_NAME="n8n-ai"
 
-# Colors for output
-RED='\033[0;31m'
+# Colors
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-# Functions
-log_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
-}
+echo -e "${BLUE}=== VPS Deployment Script ===${NC}"
+echo -e "${BLUE}Target:${NC} ${VPS_USER}@${VPS_HOST}"
+echo ""
 
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Check if required variables are set
-if [ -z "$VPS_HOST" ] || [ -z "$VPS_USER" ] || [ -z "$VPS_SSH_KEY" ]; then
-    log_error "VPS credentials not found in .env file"
-    log_error "Required: VPS_HOST, VPS_SSH_USER, VPS_SSH_KEY_PATH"
+# Check required variables
+if [ -z "$VPS_HOST" ] || [ -z "$VPS_USER" ]; then
+    echo "❌ VPS_HOST and VPS_SSH_USER must be set in .env"
     exit 1
 fi
 
-log_info "=== VPS Deployment Script ==="
-log_info "Target: ${VPS_USER}@${VPS_HOST}"
-log_info "SSH Key: ${VPS_SSH_KEY}"
-log_info "Remote directory: ${REMOTE_DIR}"
-echo ""
+# Test SSH connection
+echo -e "${GREEN}→ Testing SSH connection...${NC}"
+SSH_TEST_CMD=""
+if [ -n "$VPS_PASSWORD" ]; then
+    SSH_TEST_CMD="sshpass -p '${VPS_PASSWORD}' ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -p ${VPS_PORT} ${VPS_USER}@${VPS_HOST}"
+elif [ -f "$VPS_SSH_KEY" ]; then
+    SSH_TEST_CMD="ssh -i '${VPS_SSH_KEY}' -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o ConnectTimeout=5 -p ${VPS_PORT} ${VPS_USER}@${VPS_HOST}"
+else
+    echo "❌ Neither VPS_PASSWORD nor valid SSH key found. Please set VPS_PASSWORD in .env or ensure SSH key exists."
+    exit 1
+fi
 
-# Create remote directory and setup
-log_info "Creating remote directory structure..."
-ssh -i "${VPS_SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${VPS_USER}@${VPS_HOST} -p ${VPS_PORT} << EOF
+if ! eval "$SSH_TEST_CMD 'echo Connected'" 2>/dev/null; then
+    echo "❌ Cannot connect to VPS. Please check your credentials."
+    exit 1
+fi
+
+# Prepare remote server
+echo -e "${GREEN}→ Preparing remote server...${NC}"
+SSH_CMD=""
+if [ -n "$VPS_PASSWORD" ]; then
+    SSH_CMD="sshpass -p '${VPS_PASSWORD}' ssh -o StrictHostKeyChecking=no -p ${VPS_PORT} ${VPS_USER}@${VPS_HOST}"
+else
+    SSH_CMD="ssh -i '${VPS_SSH_KEY}' -o StrictHostKeyChecking=no -o PasswordAuthentication=no -p ${VPS_PORT} ${VPS_USER}@${VPS_HOST}"
+fi
+
+eval "$SSH_CMD" << 'ENDSSH'
     # Create directory
-    mkdir -p ${REMOTE_DIR}
+    mkdir -p /opt/n8n-ai-starter-kit
 
-    # Check if Docker is installed
+    # Install Docker if not present
     if ! command -v docker &> /dev/null; then
         echo "Installing Docker..."
         curl -fsSL https://get.docker.com -o get-docker.sh
@@ -72,114 +79,59 @@ ssh -i "${VPS_SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/n
         systemctl start docker
     fi
 
-    # Check if Docker Compose is installed
-    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    # Install Docker Compose if not present
+    if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
         echo "Installing Docker Compose..."
-        curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
+        curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         chmod +x /usr/local/bin/docker-compose
     fi
 
-    echo "Remote setup complete!"
-EOF
+    echo "✓ Server preparation complete"
+ENDSSH
 
-# Create Caddy configuration file locally
-log_info "Creating Caddy configuration..."
-cat > Caddyfile.${DOMAIN} << 'EOF'
-# Caddy Configuration for n8n AI Starter Kit
-# Base domain: daho.ai
-
-# n8n - Workflow Automation
-n8n.daho.ai {
-    reverse_proxy localhost:5678
-
-    # WebSocket support
-    header_up Connection {>Connection}
-    header_up Upgrade {>Upgrade}
-
-    # Security headers
-    header {
-        X-Frame-Options "SAMEORIGIN"
-        X-Content-Type-Options "nosniff"
-        X-XSS-Protection "1; mode=block"
-        Referrer-Policy "strict-origin-when-cross-origin"
-        -Server
-    }
-
-    # Timeouts for long-running workflows
-    transport http {
-        read_timeout 300s
-        write_timeout 300s
-    }
-}
-
-# Qdrant - Vector Database
-qdrant.daho.ai {
-    reverse_proxy localhost:6333
-
-    header {
-        X-Frame-Options "SAMEORIGIN"
-        X-Content-Type-Options "nosniff"
-        -Server
-    }
-}
-
-# MinIO API
-minio.daho.ai {
-    reverse_proxy localhost:9000
-
-    header {
-        X-Frame-Options "SAMEORIGIN"
-        X-Content-Type-Options "nosniff"
-        -Server
-    }
-}
-
-# MinIO Console
-minio-console.daho.ai {
-    reverse_proxy localhost:9001
-
-    header {
-        X-Frame-Options "SAMEORIGIN"
-        X-Content-Type-Options "nosniff"
-        -Server
-    }
-}
-EOF
-
-# Upload files to VPS
-log_info "Uploading application files to VPS..."
-
-# Create needed directories on VPS first
-sshpass -p "${VPS_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${VPS_USER}@${VPS_HOST} -p ${VPS_PORT} "mkdir -p ${REMOTE_DIR}/n8n ${REMOTE_DIR}/workflows"
-
-# Upload individual files
-scp -i "${VPS_SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${VPS_PORT} \
-    docker-compose.yml \
-    Dockerfile \
-    .env \
-    Caddyfile.${DOMAIN} \
-    ${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}/
-
-# Upload directories if they exist
-if [ -d "n8n" ]; then
-    log_info "Uploading n8n directory..."
-    scp -i "${VPS_SSH_KEY}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${VPS_PORT} \
-        n8n/* ${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}/n8n/
+# Upload files using rsync (more efficient than scp)
+echo -e "${GREEN}→ Uploading files...${NC}"
+if command -v rsync &> /dev/null; then
+    SSH_OPT=""
+    if [ -n "$VPS_PASSWORD" ]; then
+        SSH_OPT="sshpass -p '${VPS_PASSWORD}' ssh -o StrictHostKeyChecking=no -p ${VPS_PORT}"
+    else
+        SSH_OPT="ssh -i ${VPS_SSH_KEY} -o StrictHostKeyChecking=no -o PasswordAuthentication=no -p ${VPS_PORT}"
+    fi
+    
+    # Build rsync command with existing directories
+    RSYNC_CMD="rsync -avz --progress -e \"$SSH_OPT\" --exclude 'node_modules' --exclude '.git' --exclude '*.log' docker-compose.yml Dockerfile Dockerfile.runners .env n8n/"
+    
+    # Add directories if they exist
+    [ -d "workflows" ] && RSYNC_CMD="$RSYNC_CMD workflows/"
+    
+    # Execute rsync
+    eval "$RSYNC_CMD ${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}/"
+else
+    # Fallback to scp
+    if [ -n "$VPS_PASSWORD" ]; then
+        SCP_CMD="sshpass -p '${VPS_PASSWORD}' scp -o StrictHostKeyChecking=no -P ${VPS_PORT} -r docker-compose.yml Dockerfile Dockerfile.runners .env n8n/"
+    else
+        SCP_CMD="scp -i ${VPS_SSH_KEY} -o StrictHostKeyChecking=no -o PasswordAuthentication=no -P ${VPS_PORT} -r docker-compose.yml Dockerfile Dockerfile.runners .env n8n/"
+    fi
+    
+    # Add directories if they exist
+    [ -d "workflows" ] && SCP_CMD="$SCP_CMD workflows/"
+    
+    # Execute scp
+    eval "$SCP_CMD ${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}/"
 fi
-
-if [ -d "workflows" ]; then
-    log_info "Uploading workflows directory..."
-    scp -i "${VPS_SSH_KEY}" -r -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P ${VPS_PORT} \
-        workflows/* ${VPS_USER}@${VPS_HOST}:${REMOTE_DIR}/workflows/
-fi
-
-log_info "Caddy configuration file created: Caddyfile.${DOMAIN}"
-log_warn "Please manually configure Caddy using the provided file"
 
 # Deploy application
-log_info "Deploying application with Docker Compose..."
-ssh -i "${VPS_SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${VPS_USER}@${VPS_HOST} -p ${VPS_PORT} << EOF
-    cd ${REMOTE_DIR}
+echo -e "${GREEN}→ Deploying application...${NC}"
+if [ -n "$VPS_PASSWORD" ]; then
+    DEPLOY_CMD="sshpass -p '${VPS_PASSWORD}' ssh -o StrictHostKeyChecking=no -p ${VPS_PORT} ${VPS_USER}@${VPS_HOST}"
+else
+    DEPLOY_CMD="ssh -i '${VPS_SSH_KEY}' -o StrictHostKeyChecking=no -o PasswordAuthentication=no -p ${VPS_PORT} ${VPS_USER}@${VPS_HOST}"
+fi
+
+eval "$DEPLOY_CMD" << 'ENDSSH'
+    cd /opt/n8n-ai-starter-kit
 
     # Stop existing containers
     docker compose down 2>/dev/null || true
@@ -190,24 +142,25 @@ ssh -i "${VPS_SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/n
     # Start services
     docker compose up -d
 
-    # Wait for services to be healthy
-    echo "Waiting for services to start..."
-    sleep 10
+    # Wait for services
+    sleep 5
 
     # Show status
     docker compose ps
+ENDSSH
 
-    echo ""
-    echo "=========================================="
-    echo "Deployment completed successfully!"
-    echo "=========================================="
-    echo "Services available at:"
-    echo "  - n8n: https://n8n.${DOMAIN}"
-    echo "  - Qdrant: https://qdrant.${DOMAIN}"
-    echo "  - MinIO API: https://minio.${DOMAIN}"
-    echo "  - MinIO Console: https://minio-console.${DOMAIN}"
-    echo "=========================================="
-EOF
-
-log_info "=== Deployment Complete ==="
-log_info "Your application is now live!"
+echo ""
+echo -e "${GREEN}✓ Deployment complete!${NC}"
+echo ""
+echo -e "${YELLOW}Next steps:${NC}"
+echo "1. Configure Caddy reverse proxy (see Caddyfile.daho.ai)"
+echo "2. Access your services:"
+echo "   - n8n: https://n8n.daho.ai"
+echo "   - Qdrant: https://qdrant.daho.ai"
+echo "   - MinIO: https://minio.daho.ai"
+echo "   - MinIO Console: https://minio-console.daho.ai"
+echo ""
+echo -e "${YELLOW}To view logs:${NC}"
+echo "  ssh -p ${VPS_PORT} ${VPS_USER}@${VPS_HOST}"
+echo "  cd ${REMOTE_DIR}"
+echo "  docker compose logs -f"
