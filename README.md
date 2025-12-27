@@ -127,11 +127,36 @@ After completing the installation steps above, simply follow the steps below to 
    console logs to check on the progress.
 
 To open n8n at any time, visit <http://localhost:5678/> in your browser.
+
+### MinIO Object Storage
+
+This starter kit includes MinIO for S3-compatible object storage.
+
+> [!IMPORTANT]
+> **MinIO Console Limitations**: As of 2025, MinIO removed the full admin console from their Community Edition. We use the [Chainguard MinIO image](https://edu.chainguard.dev/chainguard/chainguard-images/getting-started/minio/) which provides better security and maintenance. The web interface is limited to basic object browsing.
+
 **MinIO Access:**
-- **API Endpoint**: <http://localhost:9000/>
-- **Web Console**: <http://localhost:9001/>
-- **Default Credentials**: `minioadmin` / `your-secure-minio-password-here`
-With your n8n instance, you’ll have access to over 400 integrations and a
+- **API Endpoint**: <http://localhost:9000/> or `https://minio.yourdomain.com`
+- **Web Console**: <http://localhost:9001/> or `https://minio-console.yourdomain.com`
+- **Default Credentials**: See `.env` file for `MINIO_ROOT_USER` and `MINIO_ROOT_PASSWORD`
+
+**Creating API Keys (Service Accounts)**
+
+Since the web console has limited features, use the MinIO CLI to create API keys:
+
+```bash
+# Access the MinIO container
+docker exec -it minio sh
+
+# Create an API key (service account)
+# Replace with your MINIO_ROOT_USER and MINIO_ROOT_PASSWORD from .env
+mc alias set local http://localhost:9000 minioadmin 'your-minio-password'
+mc admin user svcacct add local minioadmin
+```
+
+This will generate an Access Key and Secret Key that you can use with your applications.
+
+With your n8n instance, you'll have access to over 400 integrations and a
 suite of basic and advanced AI nodes such as
 [AI Agent](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.agent/),
 [Text classifier](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.text-classifier/),
